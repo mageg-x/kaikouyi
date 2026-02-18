@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class StorageService {
   static StorageService? _instance;
   static SharedPreferences? _prefs;
-  
+
   String? _currentUserId;
 
   StorageService._();

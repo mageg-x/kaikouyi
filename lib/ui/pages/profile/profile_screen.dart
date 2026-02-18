@@ -27,7 +27,7 @@ class ProfileScreen extends ConsumerWidget {
         child: Column(
           children: [
             _ProfileHeader(
-              name: userState.name.isEmpty ? '用户' : userState.name,
+              name: userState.nickname.isEmpty ? '用户' : userState.nickname,
               level: userState.level.overallLevel,
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -299,9 +299,9 @@ class _LevelIndicator extends StatelessWidget {
   }
 }
 
-class _MenuSection extends StatelessWidget {
+class _MenuSection extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.card,
@@ -345,6 +345,39 @@ class _MenuSection extends StatelessWidget {
             title: '关于我们',
             onTap: () {},
           ),
+          const Divider(height: 1, indent: 56),
+          _MenuItem(
+            icon: Icons.logout,
+            title: '退出登录',
+            textColor: AppColors.error,
+            onTap: () => _showLogoutDialog(context, ref),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('退出登录'),
+        content: const Text('确定要退出登录吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await ref.read(userProvider.notifier).logout();
+              if (context.mounted) {
+                context.go('/login');
+              }
+            },
+            child: Text('退出', style: TextStyle(color: AppColors.error)),
+          ),
         ],
       ),
     );
@@ -355,11 +388,13 @@ class _MenuItem extends StatelessWidget {
   final IconData icon;
   final String title;
   final VoidCallback onTap;
+  final Color? textColor;
 
   const _MenuItem({
     required this.icon,
     required this.title,
     required this.onTap,
+    this.textColor,
   });
 
   @override
@@ -370,9 +405,16 @@ class _MenuItem extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Row(
           children: [
-            Icon(icon, color: AppColors.primary),
+            Icon(icon, color: textColor ?? AppColors.primary),
             const SizedBox(width: AppSpacing.md),
-            Expanded(child: Text(title, style: AppTextStyles.body1)),
+            Expanded(
+              child: Text(
+                title,
+                style: textColor != null
+                    ? AppTextStyles.body1.copyWith(color: textColor)
+                    : AppTextStyles.body1,
+              ),
+            ),
             const Icon(Icons.chevron_right, color: AppColors.textHint),
           ],
         ),

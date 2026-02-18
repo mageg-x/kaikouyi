@@ -13,8 +13,10 @@ import (
 // 返回配置好的Gin引擎
 func SetupRouter() *gin.Engine {
 	// 创建Gin引擎
-	r := gin.Default()
+	r := gin.New()
+	r.Use(gin.Logger())
 	r.Use(middleware.CORSMiddleware())
+	r.Use(middleware.LoggerMiddleware())
 
 	// 健康检查
 	r.GET("/health", func(c *gin.Context) {

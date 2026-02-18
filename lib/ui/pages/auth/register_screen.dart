@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../providers/user_provider.dart';
+import 'login_screen.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -12,16 +11,15 @@ class RegisterScreen extends ConsumerStatefulWidget {
 }
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
-  final _nameController = TextEditingController();
+  final _nicknameController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
-  String? _errorMessage;
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _nicknameController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -29,41 +27,47 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Future<void> _handleRegister() async {
-    if (_nameController.text.isEmpty || 
-        _usernameController.text.isEmpty || 
+    if (_nicknameController.text.isEmpty ||
+        _usernameController.text.isEmpty ||
         _passwordController.text.isEmpty) {
-      setState(() => _errorMessage = '请填写所有字段');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请填写所有必填项')),
+      );
       return;
     }
 
     if (_passwordController.text != _confirmPasswordController.text) {
-      setState(() => _errorMessage = '两次输入的密码不一致');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('两次密码输入不一致')),
+      );
       return;
     }
 
-    if (_passwordController.text.length < 6) {
-      setState(() => _errorMessage = '密码长度至少6位');
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+    setState(() => _isLoading = true);
 
     final success = await ref.read(userProvider.notifier).register(
-      _usernameController.text,
-      _passwordController.text,
-      _nameController.text,
-    );
+          _usernameController.text,
+          _passwordController.text,
+          _nicknameController.text,
+        );
 
-    if (mounted) {
-      setState(() => _isLoading = false);
-      
-      if (success) {
-        context.go('/onboarding');
-      } else {
-        setState(() => _errorMessage = '用户名已存在');
+    setState(() => _isLoading = false);
+
+    if (success) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('注册成功，请登录'), backgroundColor: Colors.green),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('注册失败，用户名可能已存在'), backgroundColor: Colors.red),
+        );
       }
     }
   }
@@ -71,121 +75,127 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('注册'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(24),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: AppSpacing.xl),
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppColors.primary, AppColors.primaryLight],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Icon(
-                  Icons.record_voice_over,
-                  size: 40,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: 20),
               Text(
-                '开口易',
-                style: AppTextStyles.headline1.copyWith(
-                  color: AppColors.primary,
-                ),
+                '创建账户',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: AppSpacing.xl),
+              const SizedBox(height: 8),
+              Text(
+                '开始您的英语学习之旅',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey[600],
+                    ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 40),
               TextField(
-                controller: _nameController,
+                controller: _nicknameController,
                 decoration: InputDecoration(
                   labelText: '昵称',
-                  prefixIcon: const Icon(Icons.badge_outlined),
+                  hintText: '请输入您的昵称',
+                  prefixIcon: const Icon(Icons.person_outline),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
               ),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: 16),
               TextField(
                 controller: _usernameController,
                 decoration: InputDecoration(
                   labelText: '用户名',
-                  prefixIcon: const Icon(Icons.person_outline),
+                  hintText: '请输入用户名（用于登录）',
+                  prefixIcon: const Icon(Icons.alternate_email),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
               ),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: 16),
               TextField(
                 controller: _passwordController,
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: '密码',
+                  hintText: '请输入密码（至少6位）',
                   prefixIcon: const Icon(Icons.lock_outline),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
               ),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: 16),
               TextField(
                 controller: _confirmPasswordController,
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: '确认密码',
+                  hintText: '请再次输入密码',
                   prefixIcon: const Icon(Icons.lock_outline),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
               ),
-              if (_errorMessage != null) ...[
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  _errorMessage!,
-                  style: const TextStyle(color: AppColors.error),
-                ),
-              ],
-              const SizedBox(height: AppSpacing.lg),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _handleRegister,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.lg),
-                    ),
+              const SizedBox(height: 32),
+              ElevatedButton(
+                onPressed: _isLoading ? null : _handleRegister,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : const Text('注册', style: TextStyle(fontSize: 16)),
                 ),
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text(
+                        '注册',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
               ),
-              const SizedBox(height: AppSpacing.md),
-              TextButton(
-                onPressed: () => context.go('/login'),
-                child: Text(
-                  '已有账号？去登录',
-                  style: TextStyle(color: AppColors.primary),
-                ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '已有账户？',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      );
+                    },
+                    child: const Text('立即登录'),
+                  ),
+                ],
               ),
             ],
           ),

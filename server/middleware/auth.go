@@ -1,13 +1,11 @@
 package middleware
 
 import (
-	"log"
-	"net/http"
-	"strings"
-
-	"server/utils"
+	"fmt"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"server/utils"
 )
 
 // AuthMiddleware JWT认证中间件
@@ -16,29 +14,31 @@ func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			log.Printf("[WARN] AuthMiddleware - No Authorization header")
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
+			utils.Warn("AuthMiddleware - No Authorization header")
+			c.JSON(401, gin.H{"error": "Authorization header required"})
 			c.Abort()
 			return
 		}
 
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-		if tokenString == authHeader {
-			log.Printf("[WARN] AuthMiddleware - Invalid Bearer token format")
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Bearer token required"})
+		tokenString := authHeader
+		if len(tokenString) > 7 && tokenString[:7] == "Bearer " {
+			tokenString = tokenString[7:]
+		} else {
+			utils.Warn("AuthMiddleware - Invalid Bearer token format")
+			c.JSON(401, gin.H{"error": "Bearer token required"})
 			c.Abort()
 			return
 		}
 
 		claims, err := utils.ValidateToken(tokenString)
 		if err != nil {
-			log.Printf("[WARN] AuthMiddleware - Invalid token: %v", err)
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			utils.Warn("AuthMiddleware - Invalid token: %v", err)
+			c.JSON(401, gin.H{"error": "Invalid token"})
 			c.Abort()
 			return
 		}
 
-		log.Printf("[DEBUG] AuthMiddleware - Authenticated: UserID=%d, Username=%s", claims.UserID, claims.Username)
+		utils.Debug("AuthMiddleware - Authenticated: UserID=%d, Username=%s", claims.UserID, claims.Username)
 		c.Set("userID", claims.UserID)
 		c.Set("username", claims.Username)
 		c.Next()
@@ -60,5 +60,40 @@ func CORSMiddleware() gin.HandlerFunc {
 		}
 
 		c.Next()
+	}
+}
+
+// LoggerMiddleware 日志中间件
+// 记录每个请求的详细信息
+func LoggerMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		startTime := time.Now()
+
+		// 处理请求
+		c.Next()
+
+		// 请求结束后记录日志
+		endTime := time.Now()
+		latency := endTime.Sub(startTime)
+		clientIP := c.ClientIP()
+		method := c.Request.Method
+		path := c.Request.URL.Path
+		statusCode := c.Writer.Status()
+
+		// 记录访问日志
+		logMsg := fmt.Sprintf("%s | %3d | %13v | %15s | %-7s %s",
+			endTime.Format("2006-01-02 15:04:05"),
+			statusCode,
+			latency,
+			clientIP,
+			method,
+			path,
+		)
+
+		if statusCode >= 400 {
+			utils.Warn("%s", logMsg)
+		} else {
+			utils.Info("%s", logMsg)
+		}
 	}
 }

@@ -135,43 +135,50 @@ class _OnboardingPage1 extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Spacer(),
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppColors.primary, AppColors.primaryLight],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+          Flexible(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [AppColors.primary, AppColors.primaryLight],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: const Icon(
+                      Icons.record_voice_over,
+                      size: 60,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  Text(
+                    '开口易',
+                    style: AppTextStyles.headline1.copyWith(
+                      fontSize: 36,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    '你是不是也这样？',
+                    style: AppTextStyles.headline3,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  _PainPointItem(text: '✓ 单词认识，听不懂'),
+                  _PainPointItem(text: '✓ 心里明白，说不出'),
+                  _PainPointItem(text: '✓ 一开口就紧张'),
+                  _PainPointItem(text: '✓ 打开字幕才听懂'),
+                ],
               ),
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: const Icon(
-              Icons.record_voice_over,
-              size: 60,
-              color: Colors.white,
             ),
           ),
-          const SizedBox(height: AppSpacing.xl),
-          Text(
-            '开口易',
-            style: AppTextStyles.headline1.copyWith(
-              fontSize: 36,
-              color: AppColors.primary,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            '你是不是也这样？',
-            style: AppTextStyles.headline3,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          _PainPointItem(text: '✓ 单词认识，听不懂'),
-          _PainPointItem(text: '✓ 心里明白，说不出'),
-          _PainPointItem(text: '✓ 一开口就紧张'),
-          _PainPointItem(text: '✓ 打开字幕才听懂'),
-          const Spacer(),
           Text(
             '这就是我，怎么办？',
             style: AppTextStyles.subtitle1.copyWith(color: AppColors.primary),

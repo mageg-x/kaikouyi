@@ -36,13 +36,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     final success = await ref.read(userProvider.notifier).login(
-      _usernameController.text,
-      _passwordController.text,
-    );
+          _usernameController.text,
+          _passwordController.text,
+        );
 
     if (mounted) {
       setState(() => _isLoading = false);
-      
+
       if (success) {
         final userState = ref.read(userProvider);
         if (userState.isOnboardingComplete) {

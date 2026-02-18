@@ -10,9 +10,10 @@ import (
 // 使用 gorm.Model 包含 ID, CreatedAt, UpdatedAt, DeletedAt 字段
 type User struct {
 	gorm.Model
-	Username string    `gorm:"uniqueIndex;not null" json:"username"`        // 用户名，唯一索引
+	Username string    `gorm:"uniqueIndex;not null" json:"username"`        // 登录用户名，唯一索引
 	Password string    `gorm:"not null" json:"-"`                           // 密码，不返回给前端
-	Name     string    `json:"name"`                                        // 昵称
+	Nickname string    `json:"nickname"`                                    // 用户昵称，用于显示
+	Avatar   string    `json:"avatar"`                                      // 头像URL
 	Level    UserLevel `gorm:"embedded;embeddedPrefix:level_" json:"level"` // 用户等级信息
 	Stats    UserStats `gorm:"embedded;embeddedPrefix:stats_" json:"stats"` // 学习统计数据
 }

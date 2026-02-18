@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://10.0.2.2:8080/api';
-  
+  static const String baseUrl = 'http://110.42.45.16:8080/api';
+
   static late final Dio _dio;
   static String? _token;
 
@@ -34,7 +34,7 @@ class ApiService {
   static Future<Map<String, dynamic>> register(
     String username,
     String password,
-    String name,
+    String nickname,
   ) async {
     try {
       final response = await _dio.post(
@@ -42,7 +42,7 @@ class ApiService {
         data: {
           'username': username,
           'password': password,
-          'name': name,
+          'nickname': nickname,
         },
       );
 
@@ -104,11 +104,18 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> updateProfile(String name) async {
+  static Future<Map<String, dynamic>> updateProfile({
+    String? nickname,
+    String? avatar,
+  }) async {
     try {
+      final data = <String, dynamic>{};
+      if (nickname != null) data['nickname'] = nickname;
+      if (avatar != null) data['avatar'] = avatar;
+
       final response = await _dio.put(
         '/user/profile',
-        data: {'name': name},
+        data: data,
         options: Options(headers: _headers),
       );
 
@@ -122,7 +129,8 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> updateLevel(Map<String, dynamic> level) async {
+  static Future<Map<String, dynamic>> updateLevel(
+      Map<String, dynamic> level) async {
     try {
       final response = await _dio.put(
         '/user/level',
@@ -140,7 +148,8 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> updateStats(Map<String, dynamic> stats) async {
+  static Future<Map<String, dynamic>> updateStats(
+      Map<String, dynamic> stats) async {
     try {
       final response = await _dio.put(
         '/user/stats',

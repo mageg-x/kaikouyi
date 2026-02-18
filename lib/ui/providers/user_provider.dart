@@ -12,7 +12,7 @@ class UserState {
   final bool isOnboardingComplete;
   final String userId;
   final String username;
-  final String name;
+  final String nickname;
   final UserLevelInfo level;
   final StudyStats stats;
 
@@ -21,7 +21,7 @@ class UserState {
     this.isOnboardingComplete = false,
     this.userId = '',
     this.username = '',
-    this.name = '',
+    this.nickname = '',
     UserLevelInfo? level,
     StudyStats? stats,
   })  : level = level ?? UserLevelInfo.initial(),
@@ -32,7 +32,7 @@ class UserState {
     bool? isOnboardingComplete,
     String? userId,
     String? username,
-    String? name,
+    String? nickname,
     UserLevelInfo? level,
     StudyStats? stats,
   }) {
@@ -41,7 +41,7 @@ class UserState {
       isOnboardingComplete: isOnboardingComplete ?? this.isOnboardingComplete,
       userId: userId ?? this.userId,
       username: username ?? this.username,
-      name: name ?? this.name,
+      nickname: nickname ?? this.nickname,
       level: level ?? this.level,
       stats: stats ?? this.stats,
     );
@@ -67,7 +67,7 @@ class UserNotifier extends Notifier<UserState> {
 
   void _loadUserData(String userId) {
     final isOnboardingComplete = _storage.getBool('isOnboardingComplete') ?? false;
-    final name = _storage.getString('userName') ?? '';
+    final nickname = _storage.getString('nickname') ?? '';
     final username = _storage.getString('username') ?? '';
     
     final levelMap = <String, dynamic>{};
@@ -93,7 +93,7 @@ class UserNotifier extends Notifier<UserState> {
       isOnboardingComplete: isOnboardingComplete,
       userId: userId,
       username: username,
-      name: name,
+      nickname: nickname,
       level: level,
       stats: stats,
     );
@@ -108,7 +108,7 @@ class UserNotifier extends Notifier<UserState> {
       await _storage.setString('authToken', token);
       await _storage.setString('currentUserId', user['id'].toString());
       await _storage.setString('username', user['username'] ?? '');
-      await _storage.setString('userName', user['name'] ?? '');
+      await _storage.setString('nickname', user['nickname'] ?? '');
 
       if (user['level'] != null) {
         await _storage.setString('vocabularyLevel', user['level']['vocabulary_level'] ?? 'A1');
@@ -127,23 +127,23 @@ class UserNotifier extends Notifier<UserState> {
     }
   }
 
-  Future<bool> register(String username, String password, String name) async {
+  Future<bool> register(String username, String password, String nickname) async {
     try {
-      final response = await ApiService.register(username, password, name);
+      final response = await ApiService.register(username, password, nickname);
       final user = response['user'];
       final token = response['token'];
 
       await _storage.setString('authToken', token);
       await _storage.setString('currentUserId', user['id'].toString());
       await _storage.setString('username', user['username'] ?? '');
-      await _storage.setString('userName', user['name'] ?? '');
+      await _storage.setString('nickname', user['nickname'] ?? '');
 
       state = UserState(
         isLoggedIn: true,
         isOnboardingComplete: false,
         userId: user['id'].toString(),
         username: user['username'] ?? '',
-        name: user['name'] ?? '',
+        nickname: user['nickname'] ?? '',
         level: UserLevelInfo.initial(),
         stats: StudyStats(),
       );
@@ -158,17 +158,17 @@ class UserNotifier extends Notifier<UserState> {
     await _storage.remove('authToken');
     await _storage.remove('currentUserId');
     await _storage.remove('username');
-    await _storage.remove('userName');
+    await _storage.remove('nickname');
     state = UserState();
   }
 
-  Future<void> completeOnboarding(String name) async {
+  Future<void> completeOnboarding(String nickname) async {
     await _storage.setBool('isOnboardingComplete', true);
-    await _storage.setString('userName', name);
-    await ApiService.updateProfile(name);
+    await _storage.setString('nickname', nickname);
+    await ApiService.updateProfile(nickname: nickname);
     state = state.copyWith(
       isOnboardingComplete: true,
-      name: name.isNotEmpty ? name : state.name,
+      nickname: nickname.isNotEmpty ? nickname : state.nickname,
     );
   }
 

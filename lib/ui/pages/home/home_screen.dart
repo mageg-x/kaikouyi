@@ -21,10 +21,14 @@ class HomeScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _Header(name: userState.name.isEmpty ? '小王' : userState.name),
+              _Header(
+                  name: userState.nickname.isEmpty ? '小王' : userState.nickname),
               const SizedBox(height: AppSpacing.lg),
               _TodayProgressCard(
-                progress: ((todayProgress['newWords']! + todayProgress['reviewWords']!) / 17).clamp(0.0, 1.0),
+                progress: ((todayProgress['newWords']! +
+                            todayProgress['reviewWords']!) /
+                        17)
+                    .clamp(0.0, 1.0),
               ),
               const SizedBox(height: AppSpacing.lg),
               _QuickEntrySection(),
@@ -242,7 +246,8 @@ class _RecommendationCard extends StatelessWidget {
                     color: AppColors.warning.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppRadius.sm),
                   ),
-                  child: const Icon(Icons.local_fire_department, color: AppColors.warning, size: 16),
+                  child: const Icon(Icons.local_fire_department,
+                      color: AppColors.warning, size: 16),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Text(title, style: AppTextStyles.caption),
@@ -404,19 +409,24 @@ class _LevelChip extends StatelessWidget {
   final int count;
   final bool done;
 
-  const _LevelChip({required this.label, required this.count, required this.done});
+  const _LevelChip(
+      {required this.label, required this.count, required this.done});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
       decoration: BoxDecoration(
-        color: done ? AppColors.success.withValues(alpha: 0.1) : AppColors.textHint.withValues(alpha: 0.1),
+        color: done
+            ? AppColors.success.withValues(alpha: 0.1)
+            : AppColors.textHint.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppRadius.sm),
       ),
       child: Text(
         '$label:$count句 ${done ? "✓" : ""}',
-        style: AppTextStyles.caption.copyWith(color: done ? AppColors.success : AppColors.textHint),
+        style: AppTextStyles.caption
+            .copyWith(color: done ? AppColors.success : AppColors.textHint),
       ),
     );
   }
@@ -506,7 +516,8 @@ class _HotScenesSection extends StatelessWidget {
               label: Text(scene),
               onPressed: onTap,
               backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-              labelStyle: AppTextStyles.body2.copyWith(color: AppColors.primary),
+              labelStyle:
+                  AppTextStyles.body2.copyWith(color: AppColors.primary),
             );
           }).toList(),
         ),
