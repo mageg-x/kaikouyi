@@ -7,6 +7,7 @@ import 'core/router/app_router.dart';
 import 'core/utils/logger.dart';
 import 'data/services/storage_service.dart';
 import 'data/services/database_service.dart';
+import 'data/services/api_service.dart';
 import 'ui/providers/user_provider.dart';
 
 /// 应用入口函数
@@ -37,6 +38,11 @@ Future<void> main() async {
   AppLogger.info('正在初始化本地数据库...');
   await DatabaseService.getInstance();
   AppLogger.info('本地数据库初始化完成');
+
+  // 初始化 API 服务
+  AppLogger.info('正在初始化API服务...');
+  ApiService.init();
+  AppLogger.info('API服务初始化完成');
 
   // 运行应用，注入ProviderScope和依赖
   AppLogger.info('正在启动应用...');

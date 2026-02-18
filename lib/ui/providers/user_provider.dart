@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../data/services/api_service.dart';
 import '../../data/services/storage_service.dart';
 import '../../data/models/user_model.dart';
 
@@ -60,14 +61,11 @@ class UserNotifier extends Notifier<UserState> {
   void _checkLoginStatus() {
     final currentUserId = _storage.getString('currentUserId');
     if (currentUserId != null) {
-      _storage.setCurrentUser(currentUserId);
       _loadUserData(currentUserId);
     }
   }
 
   void _loadUserData(String userId) {
-    _storage.setCurrentUser(userId);
-    
     final isOnboardingComplete = _storage.getBool('isOnboardingComplete') ?? false;
     final name = _storage.getString('userName') ?? '';
     final username = _storage.getString('username') ?? '';
@@ -102,48 +100,72 @@ class UserNotifier extends Notifier<UserState> {
   }
 
   Future<bool> login(String username, String password) async {
-    if (_storage.userExists(username)) {
-      final userId = _storage.getUserIdByUsername(username);
-      if (userId != null && _storage.checkUserCredentials(username, password)) {
-        await _storage.setString('currentUserId', userId);
-        _loadUserData(userId);
-        return true;
+    try {
+      final response = await ApiService.login(username, password);
+      final user = response['user'];
+      final token = response['token'];
+
+      await _storage.setString('authToken', token);
+      await _storage.setString('currentUserId', user['id'].toString());
+      await _storage.setString('username', user['username'] ?? '');
+      await _storage.setString('userName', user['name'] ?? '');
+
+      if (user['level'] != null) {
+        await _storage.setString('vocabularyLevel', user['level']['vocabulary_level'] ?? 'A1');
+        await _storage.setInt('vocabularyScore', user['level']['vocabulary_score'] ?? 0);
+        await _storage.setString('listeningLevel', user['level']['listening_level'] ?? 'A1');
+        await _storage.setInt('listeningScore', user['level']['listening_score'] ?? 0);
+        await _storage.setString('speakingLevel', user['level']['speaking_level'] ?? 'A1');
+        await _storage.setInt('speakingScore', user['level']['speaking_score'] ?? 0);
+        await _storage.setString('overallLevel', user['level']['overall_level'] ?? 'A1');
       }
+
+      _loadUserData(user['id'].toString());
+      return true;
+    } catch (e) {
+      return false;
     }
-    return false;
   }
 
   Future<bool> register(String username, String password, String name) async {
-    if (_storage.userExists(username)) {
+    try {
+      final response = await ApiService.register(username, password, name);
+      final user = response['user'];
+      final token = response['token'];
+
+      await _storage.setString('authToken', token);
+      await _storage.setString('currentUserId', user['id'].toString());
+      await _storage.setString('username', user['username'] ?? '');
+      await _storage.setString('userName', user['name'] ?? '');
+
+      state = UserState(
+        isLoggedIn: true,
+        isOnboardingComplete: false,
+        userId: user['id'].toString(),
+        username: user['username'] ?? '',
+        name: user['name'] ?? '',
+        level: UserLevelInfo.initial(),
+        stats: StudyStats(),
+      );
+      return true;
+    } catch (e) {
       return false;
     }
-    
-    await _storage.createUser(username, password);
-    final userId = _storage.getUserIdByUsername(username);
-    if (userId != null) {
-      await _storage.setString('currentUserId', userId);
-      _storage.setCurrentUser(userId);
-      await _storage.setString('username', username);
-      await _storage.setString('userName', name);
-      await _storage.setBool('isOnboardingComplete', false);
-      _loadUserData(userId);
-      return true;
-    }
-    return false;
   }
 
   Future<void> logout() async {
+    await ApiService.logout();
+    await _storage.remove('authToken');
     await _storage.remove('currentUserId');
-    _storage.setCurrentUser(null);
+    await _storage.remove('username');
+    await _storage.remove('userName');
     state = UserState();
   }
 
   Future<void> completeOnboarding(String name) async {
     await _storage.setBool('isOnboardingComplete', true);
     await _storage.setString('userName', name);
-    if (state.name.isEmpty && name.isNotEmpty) {
-      await _storage.setString('userName', name);
-    }
+    await ApiService.updateProfile(name);
     state = state.copyWith(
       isOnboardingComplete: true,
       name: name.isNotEmpty ? name : state.name,
@@ -158,6 +180,17 @@ class UserNotifier extends Notifier<UserState> {
     await _storage.setString('speakingLevel', level.speakingLevel);
     await _storage.setInt('speakingScore', level.speakingScore);
     await _storage.setString('overallLevel', level.overallLevel);
+
+    await ApiService.updateLevel({
+      'vocabulary_level': level.vocabularyLevel,
+      'vocabulary_score': level.vocabularyScore,
+      'listening_level': level.listeningLevel,
+      'listening_score': level.listeningScore,
+      'speaking_level': level.speakingLevel,
+      'speaking_score': level.speakingScore,
+      'overall_level': level.overallLevel,
+    });
+
     state = state.copyWith(level: level);
   }
 
@@ -167,6 +200,15 @@ class UserNotifier extends Notifier<UserState> {
     await _storage.setInt('totalWordsLearned', stats.totalWordsLearned);
     await _storage.setInt('totalListeningMinutes', stats.totalListeningMinutes);
     await _storage.setInt('totalSpeakingMinutes', stats.totalSpeakingMinutes);
+
+    await ApiService.updateStats({
+      'total_study_days': stats.totalStudyDays,
+      'current_streak': stats.currentStreak,
+      'total_words_learned': stats.totalWordsLearned,
+      'total_listening_minutes': stats.totalListeningMinutes,
+      'total_speaking_minutes': stats.totalSpeakingMinutes,
+    });
+
     state = state.copyWith(stats: stats);
   }
 
