@@ -7,7 +7,7 @@ import 'core/router/app_router.dart';
 import 'core/utils/logger.dart';
 import 'data/services/storage_service.dart';
 import 'data/services/database_service.dart';
-import 'presentation/providers/user_provider.dart';
+import 'ui/providers/user_provider.dart';
 
 /// 应用入口函数
 /// 初始化Flutter框架、本地存储和数据库

@@ -1,34 +1,31 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../presentation/screens/onboarding/onboarding_screen.dart';
-import '../../presentation/screens/test/vocabulary_test_screen.dart';
-import '../../presentation/screens/test/listening_test_screen.dart';
-import '../../presentation/screens/test/speaking_test_screen.dart';
-import '../../presentation/screens/test/test_result_screen.dart';
-import '../../presentation/screens/home/home_screen.dart';
-import '../../presentation/screens/words/word_learning_screen.dart';
-import '../../presentation/screens/words/word_review_screen.dart';
-import '../../presentation/screens/words/word_book_screen.dart';
-import '../../presentation/screens/listening/listening_level_screen.dart';
-import '../../presentation/screens/listening/listening_training_screen.dart';
-import '../../presentation/screens/speaking/shadow_reading_screen.dart';
-import '../../presentation/screens/speaking/practice_dialogue_screen.dart';
-import '../../presentation/screens/scene/scene_list_screen.dart';
-import '../../presentation/screens/scene/scene_detail_screen.dart';
-import '../../presentation/screens/profile/profile_screen.dart';
-import '../../presentation/screens/profile/settings_screen.dart';
-import '../../presentation/screens/profile/achievements_screen.dart';
-import '../../presentation/widgets/main_scaffold.dart';
-import '../../presentation/providers/user_provider.dart';
+import '../../ui/pages/onboarding/onboarding_screen.dart';
+import '../../ui/pages/test/vocabulary_test_screen.dart';
+import '../../ui/pages/test/listening_test_screen.dart';
+import '../../ui/pages/test/speaking_test_screen.dart';
+import '../../ui/pages/test/test_result_screen.dart';
+import '../../ui/pages/home/home_screen.dart';
+import '../../ui/pages/words/word_learning_screen.dart';
+import '../../ui/pages/words/word_review_screen.dart';
+import '../../ui/pages/words/word_book_screen.dart';
+import '../../ui/pages/listening/listening_level_screen.dart';
+import '../../ui/pages/listening/listening_training_screen.dart';
+import '../../ui/pages/speaking/shadow_reading_screen.dart';
+import '../../ui/pages/speaking/practice_dialogue_screen.dart';
+import '../../ui/pages/scene/scene_list_screen.dart';
+import '../../ui/pages/scene/scene_detail_screen.dart';
+import '../../ui/pages/profile/profile_screen.dart';
+import '../../ui/pages/profile/settings_screen.dart';
+import '../../ui/pages/profile/achievements_screen.dart';
+import '../../ui/components/main_scaffold.dart';
 import '../utils/logger.dart';
 
 /// 路由Provider
 /// 根据用户状态返回不同的路由配置
 final routerProvider = Provider<GoRouter>((ref) {
   AppLogger.debug('routerProvider 被初始化');
-  // ignore: unused_local_variable
-  final userState = ref.watch(userProvider);
   
   return GoRouter(
     initialLocation: '/onboarding',

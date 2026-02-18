@@ -98,7 +98,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   if (_currentPage < 2) ...[
                     const SizedBox(height: AppSpacing.md),
                     TextButton(
-                      onPressed: () => _completeOnboarding(''),
+                      onPressed: () async {
+                        await _completeOnboarding('');
+                      },
                       child: Text(
                         '跳过，先看看',
                         style: TextStyle(color: AppColors.textSecondary),
