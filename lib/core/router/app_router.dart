@@ -1,6 +1,8 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../ui/pages/auth/login_screen.dart';
+import '../../ui/pages/auth/register_screen.dart';
 import '../../ui/pages/onboarding/onboarding_screen.dart';
 import '../../ui/pages/test/vocabulary_test_screen.dart';
 import '../../ui/pages/test/listening_test_screen.dart';
@@ -28,9 +30,23 @@ final routerProvider = Provider<GoRouter>((ref) {
   AppLogger.debug('routerProvider 被初始化');
   
   return GoRouter(
-    initialLocation: '/onboarding',
+    initialLocation: '/login',
     debugLogDiagnostics: true,
     routes: [
+      GoRoute(
+        path: '/login',
+        builder: (context, state) {
+          AppLogger.logRouteChange('/login');
+          return const LoginScreen();
+        },
+      ),
+      GoRoute(
+        path: '/register',
+        builder: (context, state) {
+          AppLogger.logRouteChange('/register');
+          return const RegisterScreen();
+        },
+      ),
       GoRoute(
         path: '/onboarding',
         builder: (context, state) {

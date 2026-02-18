@@ -2,20 +2,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/services/storage_service.dart';
 import '../../data/models/user_model.dart';
 
-/// 存储服务Provider
 final storageServiceProvider = Provider<StorageService>((ref) {
   throw UnimplementedError('StorageService must be initialized before use');
 });
 
-/// 用户状态数据类
 class UserState {
+  final bool isLoggedIn;
   final bool isOnboardingComplete;
+  final String userId;
+  final String username;
   final String name;
   final UserLevelInfo level;
   final StudyStats stats;
 
   UserState({
+    this.isLoggedIn = false,
     this.isOnboardingComplete = false,
+    this.userId = '',
+    this.username = '',
     this.name = '',
     UserLevelInfo? level,
     StudyStats? stats,
@@ -23,13 +27,19 @@ class UserState {
         stats = stats ?? StudyStats();
 
   UserState copyWith({
+    bool? isLoggedIn,
     bool? isOnboardingComplete,
+    String? userId,
+    String? username,
     String? name,
     UserLevelInfo? level,
     StudyStats? stats,
   }) {
     return UserState(
+      isLoggedIn: isLoggedIn ?? this.isLoggedIn,
       isOnboardingComplete: isOnboardingComplete ?? this.isOnboardingComplete,
+      userId: userId ?? this.userId,
+      username: username ?? this.username,
       name: name ?? this.name,
       level: level ?? this.level,
       stats: stats ?? this.stats,
@@ -37,20 +47,30 @@ class UserState {
   }
 }
 
-/// 用户状态管理器 (使用Riverpod 3.x的Notifier)
 class UserNotifier extends Notifier<UserState> {
   late StorageService _storage;
 
   @override
   UserState build() {
     _storage = ref.watch(storageServiceProvider);
-    _loadUserData();
+    _checkLoginStatus();
     return UserState();
   }
 
-  void _loadUserData() {
+  void _checkLoginStatus() {
+    final currentUserId = _storage.getString('currentUserId');
+    if (currentUserId != null) {
+      _storage.setCurrentUser(currentUserId);
+      _loadUserData(currentUserId);
+    }
+  }
+
+  void _loadUserData(String userId) {
+    _storage.setCurrentUser(userId);
+    
     final isOnboardingComplete = _storage.getBool('isOnboardingComplete') ?? false;
     final name = _storage.getString('userName') ?? '';
+    final username = _storage.getString('username') ?? '';
     
     final levelMap = <String, dynamic>{};
     levelMap['vocabularyLevel'] = _storage.getString('vocabularyLevel') ?? 'A1';
@@ -71,19 +91,62 @@ class UserNotifier extends Notifier<UserState> {
     final stats = StudyStats.fromMap(statsMap);
 
     state = UserState(
+      isLoggedIn: true,
       isOnboardingComplete: isOnboardingComplete,
+      userId: userId,
+      username: username,
       name: name,
       level: level,
       stats: stats,
     );
   }
 
+  Future<bool> login(String username, String password) async {
+    if (_storage.userExists(username)) {
+      final userId = _storage.getUserIdByUsername(username);
+      if (userId != null && _storage.checkUserCredentials(username, password)) {
+        await _storage.setString('currentUserId', userId);
+        _loadUserData(userId);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  Future<bool> register(String username, String password, String name) async {
+    if (_storage.userExists(username)) {
+      return false;
+    }
+    
+    await _storage.createUser(username, password);
+    final userId = _storage.getUserIdByUsername(username);
+    if (userId != null) {
+      await _storage.setString('currentUserId', userId);
+      _storage.setCurrentUser(userId);
+      await _storage.setString('username', username);
+      await _storage.setString('userName', name);
+      await _storage.setBool('isOnboardingComplete', false);
+      _loadUserData(userId);
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> logout() async {
+    await _storage.remove('currentUserId');
+    _storage.setCurrentUser(null);
+    state = UserState();
+  }
+
   Future<void> completeOnboarding(String name) async {
     await _storage.setBool('isOnboardingComplete', true);
     await _storage.setString('userName', name);
+    if (state.name.isEmpty && name.isNotEmpty) {
+      await _storage.setString('userName', name);
+    }
     state = state.copyWith(
       isOnboardingComplete: true,
-      name: name,
+      name: name.isNotEmpty ? name : state.name,
     );
   }
 
@@ -139,10 +202,8 @@ class UserNotifier extends Notifier<UserState> {
   }
 }
 
-/// 用户状态Provider
 final userProvider = NotifierProvider<UserNotifier, UserState>(UserNotifier.new);
 
-/// 初始化存储服务Provider
 final initializeStorageProvider = FutureProvider<StorageService>((ref) async {
   return await StorageService.getInstance();
 });
